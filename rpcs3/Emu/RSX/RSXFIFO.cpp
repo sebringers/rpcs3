@@ -649,7 +649,7 @@ namespace rsx
 		}
 	}
 
-	void thread::run_FIFO()
+	void thread::_FIFO()
 	{
 		FIFO::register_pair command;
 		fifo_ctrl->read(command);
@@ -662,7 +662,7 @@ namespace rsx
 			{
 			case FIFO::FIFO_NOP:
 			{
-				if (performance_counters.state == FIFO::state::running)
+				if (performance_counters.state == FIFO::state::ning)
 				{
 					performance_counters.FIFO_idle_timestamp = get_system_time();
 					performance_counters.state = FIFO::state::nop;
@@ -672,7 +672,7 @@ namespace rsx
 			}
 			case FIFO::FIFO_EMPTY:
 			{
-				if (performance_counters.state == FIFO::state::running)
+				if (performance_counters.state == FIFO::state::ning)
 				{
 					performance_counters.FIFO_idle_timestamp = get_system_time();
 					performance_counters.state = FIFO::state::empty;
@@ -707,7 +707,7 @@ namespace rsx
 				if (offs == fifo_ctrl->get_pos())
 				{
 					//Jump to self. Often preceded by NOP
-					if (performance_counters.state == FIFO::state::running)
+					if (performance_counters.state == FIFO::state::ning)
 					{
 						performance_counters.FIFO_idle_timestamp = get_system_time();
 						sync_point_request.release(true);
@@ -773,7 +773,11 @@ namespace rsx
 			}
 
 			// If we reached here, this is likely an error
-			fmt::throw_exception("Unexpected command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
+			// Skip unknown high-bit commands gracefully instead of crashing
+			// These are sent by some games (e.g. SOCOM: Confrontation) during rapid state changes
+				rsx_log.error("FIFO: Skipping unknown command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
+				fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
+				return;
 		}
 
 		if (const auto state = performance_counters.state;
