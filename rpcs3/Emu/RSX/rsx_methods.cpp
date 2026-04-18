@@ -1611,6 +1611,9 @@ namespace rsx
 		// Unknown (NV4097?)
 		bind(0x171c >> 2, trace_method);
 
+		// Unknown method sent by SOCOM: Confrontation (spectator mode)
+        bind_array(0x4200 >> 2, 1, 0x44, nullptr);
+
 		// NV406E
 		bind(NV406E_SET_REFERENCE, nv406e::set_reference);
 		bind(NV406E_SEMAPHORE_ACQUIRE, nv406e::semaphore_acquire);
