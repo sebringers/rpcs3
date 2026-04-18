@@ -773,8 +773,8 @@ namespace rsx
 			}
 
 			// If we reached here, this is likely an error
-			// Skip unknown high-bit commands gracefully instead of crashing
-			// These are sent by some games (e.g. SOCOM: Confrontation) during rapid state changes
+		    // Skip unknown high-bit commands gracefully instead of crashing
+		    // These are sent by some games (e.g. SOCOM: Confrontation) during rapid state changes
 				rsx_log.error("FIFO: Skipping unknown command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
 				fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
 				return;
