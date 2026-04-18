@@ -412,6 +412,15 @@ namespace rsx
 					return;
 				}
 
+				// Malformed command - check for known padding/sentinel values and skip gracefully
+				// 0xff000000 is sent by SOCOM: Confrontation during rapid spectator camera switches
+				if ((m_cmd & 0xff000000) == 0xff000000)
+				{
+					m_ctrl->get.release(m_internal_get += 4);
+					data.reg = FIFO_NOP;
+					return;
+				}
+
 				// Malformed command, optional recovery
 				data.reg = FIFO_ERROR;
 				return;
