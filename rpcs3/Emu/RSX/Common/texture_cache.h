@@ -1293,24 +1293,25 @@ namespace rsx
 
 			if (dimensions_mismatch != nullptr)
 			{
-				auto &tex = *dimensions_mismatch;
 				rsx_log.warning("Cached object for address 0x%X was found, but it does not match stored parameters (width=%d vs %d; height=%d vs %d; depth=%d vs %d; mipmaps=%d vs %d)",
-					range.start, attr.width, tex.get_width(), attr.height, tex.get_height(), attr.depth, tex.get_depth(), attr.mipmaps, tex.get_mipmaps());
+					range.start, attr.width, dimensions_mismatch->get_width(), attr.height, dimensions_mismatch->get_height(), attr.depth, dimensions_mismatch->get_depth(), attr.mipmaps, dimensions_mismatch->get_mipmaps());
+
+				if (!create_if_not_found)
+					return nullptr;
+
+				// Invalidate stale entry with mismatched dimensions to prevent
+				// duplicate cache entries at the same address (fixes texture flickering
+				// in games that reuse texture memory with different sizes e.g. SOCOM: Confrontation)
+				if (dimensions_mismatch->exists())
+				{
+					dimensions_mismatch->destroy();
+				}
+
+				return dimensions_mismatch;
 			}
 
 			if (!create_if_not_found)
 				return nullptr;
-
-			// If found, use the best fitting section
-			if (best_fit != nullptr)
-			{
-				if (best_fit->exists())
-				{
-					best_fit->destroy();
-				}
-
-				return best_fit;
-			}
 
 			// Return the first dirty section found, if any
 			if (reuse != nullptr)
