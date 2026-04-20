@@ -736,7 +736,7 @@ namespace rsx
 				if (fifo_ret_addr == RSX_CALL_STACK_EMPTY)
 				{
 					rsx_log.error("FIFO: RET found without corresponding CALL (last cmd = 0x%x), skipping", get_fifo_cmd());
-        			fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
+					fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
 					return;
 				}
 
@@ -764,11 +764,7 @@ namespace rsx
 			}
 
 			// If we reached here, this is likely an error
-			// Skip unknown high-bit commands gracefully instead of crashing
-			// These are sent by some games (e.g. SOCOM: Confrontation) during rapid state changes
-			rsx_log.error("FIFO: Skipping unknown command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
-			fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
-			return;
+			fmt::throw_exception("Unexpected command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
 		}
 
 		if (const auto state = performance_counters.state;
