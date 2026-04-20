@@ -682,9 +682,9 @@ namespace rsx
 			}
 			case FIFO::FIFO_ERROR:
 			{
-				rsx_log.error("FIFO error: possible desync event (last cmd = 0x%x)", get_fifo_cmd());
-				recover_fifo();
-				return;
+    			rsx_log.error("FIFO error: possible desync event (last cmd = 0x%x), skipping", get_fifo_cmd());
+    			fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
+    			return;
 			}
 			}
 
