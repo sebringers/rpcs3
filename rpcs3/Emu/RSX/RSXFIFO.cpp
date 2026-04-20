@@ -412,15 +412,6 @@ namespace rsx
 					return;
 				}
 
-				// Malformed command - check for known padding/sentinel values and skip gracefully
-				// 0xff000000 is sent by SOCOM: Confrontation during rapid spectator camera switches
-				if ((m_cmd & 0xff000000) == 0xff000000)
-				{
-					m_ctrl->get.release(m_internal_get += 4);
-					data.reg = FIFO_NOP;
-					return;
-				}
-
 				// Malformed command, optional recovery
 				data.reg = FIFO_ERROR;
 				return;
@@ -649,7 +640,7 @@ namespace rsx
 		}
 	}
 
-	void thread::_FIFO()
+	void thread::run_FIFO()
 	{
 		FIFO::register_pair command;
 		fifo_ctrl->read(command);
@@ -662,7 +653,7 @@ namespace rsx
 			{
 			case FIFO::FIFO_NOP:
 			{
-				if (performance_counters.state == FIFO::state::ning)
+				if (performance_counters.state == FIFO::state::running)
 				{
 					performance_counters.FIFO_idle_timestamp = get_system_time();
 					performance_counters.state = FIFO::state::nop;
@@ -672,7 +663,7 @@ namespace rsx
 			}
 			case FIFO::FIFO_EMPTY:
 			{
-				if (performance_counters.state == FIFO::state::ning)
+				if (performance_counters.state == FIFO::state::running)
 				{
 					performance_counters.FIFO_idle_timestamp = get_system_time();
 					performance_counters.state = FIFO::state::empty;
@@ -707,7 +698,7 @@ namespace rsx
 				if (offs == fifo_ctrl->get_pos())
 				{
 					//Jump to self. Often preceded by NOP
-					if (performance_counters.state == FIFO::state::ning)
+					if (performance_counters.state == FIFO::state::running)
 					{
 						performance_counters.FIFO_idle_timestamp = get_system_time();
 						sync_point_request.release(true);
@@ -773,11 +764,11 @@ namespace rsx
 			}
 
 			// If we reached here, this is likely an error
-		    // Skip unknown high-bit commands gracefully instead of crashing
-		    // These are sent by some games (e.g. SOCOM: Confrontation) during rapid state changes
-				rsx_log.error("FIFO: Skipping unknown command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
-				fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
-				return;
+			// Skip unknown high-bit commands gracefully instead of crashing
+			// These are sent by some games (e.g. SOCOM: Confrontation) during rapid state changes
+			rsx_log.error("FIFO: Skipping unknown command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
+			fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
+			return;
 		}
 
 		if (const auto state = performance_counters.state;
