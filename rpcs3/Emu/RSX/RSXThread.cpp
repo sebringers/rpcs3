@@ -792,7 +792,7 @@ namespace rsx
 			if (backend_config.supports_hw_conditional_render)
 			{
 				// In this mode, it is possible to skip the cond render while the backend is still processing data.
-				// The backend guarantees that any draw calls emitted during this time will NOT generate any ROP writes
+				// The backend guarantees that any draw calls emitted during this  will NOT generate any ROP writes
 				ensure(!cond_render_ctrl.hw_cond_active);
 
 				// Pending evaluation, use hardware test
@@ -2747,7 +2747,7 @@ namespace rsx
 
 			// Check timestamp of last tracked cmd
 			// Shorten the range of forbidden difference if driver wake-up delay is used
-			if (current_time - cmd_info.timestamp < 2'000'000u - std::min<u32>(g_cfg.video.driver_wakeup_delay * 700, 1'400'000))
+			if (current_time - cmd_info.timestamp < 10'000'000u - std::min<u32>(g_cfg.video.driver_wakeup_delay * 700, 1'400'000))
 			{
 				// Probably hopeless
 				kill_itself = true;
