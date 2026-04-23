@@ -343,13 +343,19 @@ namespace rsx
 			switch (type)
 			{
 			case CELL_GCM_ZPASS_PIXEL_CNT:
-				if (value)
-				{
-					value = (g_cfg.video.precise_zpass_count) ?
-						scale_result(value) :
-						u16{ umax };
-				}
-				break;
+    			if (value)
+    			{
+        			value = (g_cfg.video.precise_zpass_count) ?
+            		scale_result(value) :
+            		u16{ umax };
+    			}
+    			else if (surface_active)
+    			{
+        // Avoid returning exact zero which causes games like SOCOM: Confrontation
+        // to incorrectly cull visible geometry. Real PS3 ZCull rarely returns exact zeros.
+        			value = 1;
+    			}
+    			break;
 			case CELL_GCM_ZCULL_STATS3:
 				value = (value || !surface_active || !stats_enabled) ? 0 : u16{ umax };
 				break;
