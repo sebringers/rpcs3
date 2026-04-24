@@ -789,7 +789,11 @@ error_code sys_rsx_context_attribute(u32 context_id, u32 package_id, u64 a3, u64
 
 		if (!render->is_fifo_idle())
 		{
-			sys_rsx.warning("sys_rsx_context_attribute(): RSX is not idle while setting zcull");
+    		sys_rsx.warning("sys_rsx_context_attribute(): RSX is not idle while setting zcull, waiting...");
+    		// On real PS3 hardware, ZCull cannot be configured while RSX is active
+    		// Wait for RSX to become idle before proceeding to avoid stale ZCull state
+    		render->flush_fifo();
+    		render->sync_point_request.release(true);
 		}
 
 		const u32 width = ((a4 & 0xFFFFFFFF) >> 22) << 6;
