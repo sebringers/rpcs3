@@ -284,7 +284,9 @@ namespace rsx
 					{
 						if (arg == FIFO_ERROR)
 						{
-							m_thread->recover_fifo();
+							// Skip gracefully instead of calling recover_fifo
+							m_internal_get += 4;
+							m_remaining_commands = 0;
 						}
 
 						return false;
@@ -682,9 +684,9 @@ namespace rsx
 			}
 			case FIFO::FIFO_ERROR:
 			{
-    			rsx_log.error("FIFO error: possible desync event (last cmd = 0x%x), skipping", get_fifo_cmd());
-    			fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
-    			return;
+				rsx_log.error("FIFO error: possible desync event (last cmd = 0x%x), skipping", get_fifo_cmd());
+				fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
+				return;
 			}
 			}
 
@@ -720,8 +722,8 @@ namespace rsx
 				if (fifo_ret_addr != RSX_CALL_STACK_EMPTY)
 				{
 					// Only one layer is allowed in the call stack.
-					rsx_log.error("FIFO: CALL found inside a subroutine (last cmd = 0x%x)", get_fifo_cmd());
-					recover_fifo();
+					rsx_log.error("FIFO: CALL found inside a subroutine (last cmd = 0x%x), skipping", get_fifo_cmd());
+					fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
 					return;
 				}
 
@@ -764,7 +766,12 @@ namespace rsx
 			}
 
 			// If we reached here, this is likely an error
-			fmt::throw_exception("Unexpected command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
+			// If we reached here, this is likely an error
+			// Skip unknown high-bit commands gracefully instead of crashing
+			// These are sent by some games (e.g. SOCOM: Confrontation) during rapid state changes
+			rsx_log.error("FIFO: Skipping unknown command 0x%x (last cmd: 0x%x)", cmd, fifo_ctrl->last_cmd());
+			fifo_ctrl->set_get(fifo_ctrl->get_pos() + 4);
+			return;
 		}
 
 		if (const auto state = performance_counters.state;
