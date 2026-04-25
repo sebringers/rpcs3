@@ -2764,7 +2764,16 @@ namespace rsx
 		}
 
 		// Error. Should reset the queue
-		fifo_ctrl->set_get(restore_point);
+		// If GET is ahead of PUT, the ring buffer pointer is corrupted - reset to PUT
+		if (ctrl->get > ctrl->put)
+		{
+			rsx_log.error("FIFO: GET (0x%x) is ahead of PUT (0x%x), resetting to PUT", +ctrl->get, +ctrl->put);
+			fifo_ctrl->set_get(ctrl->put & ~3);
+		}
+		else
+		{
+			fifo_ctrl->set_get(restore_point);
+		}
 		fifo_ret_addr = saved_fifo_ret;
 		std::this_thread::sleep_for(2ms);
 		fifo_ctrl->abort();
