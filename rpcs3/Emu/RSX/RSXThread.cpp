@@ -266,7 +266,8 @@ namespace rsx
 			return 0;
 		}
 
-		fmt::throw_exception("rsx::get_address(offset=0x%x, location=0x%x): %s%s", offset, location, msg, src_loc);
+		rsx_log.error("rsx::get_address(offset=0x%x, location=0x%x): %s%s - returning 0", offset, location, msg, src_loc);
+		return 0;
 	}
 
 	extern void set_rsx_yield_flag() noexcept
